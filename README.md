@@ -1,1 +1,3 @@
 # change_directory_number_of_digits
+
+数字4桁のディレクトリ名から先頭の数字1桁を削除し、数字3桁のディレクトリ名に変更します。
