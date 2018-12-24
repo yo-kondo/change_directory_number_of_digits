@@ -9,7 +9,7 @@ fun main(args: Array<String>) {
     // 対象のディレクトリ名を設定
     val path = """D:\work\md"""
 
-    // TODO:changeDirectory(path)
+    changeDirectory(path)
     changeImageLink(path)
 }
 
@@ -18,12 +18,22 @@ fun main(args: Array<String>) {
  */
 private fun changeDirectory(path: String) {
 
-    File(path).listFiles()
+    val reg = Regex("""0[0-9]{3}""")
+
+    File(path).walkTopDown()
         // 正規表現に合致したディレクトリ名のみ抽出
-        .filter { Regex("""[0-9]{4}""").matches(it.name) }
+        .filter {
+            it.isDirectory
+                    && reg.matches(it.name)
+        }
         .forEach {
             // 変更するディレクトリ（Fileクラスで作成）を指定し、名前を変更
-            it.renameTo(File(path, it.name.substring(1, it.name.length)))
+            it.renameTo(
+                File(
+                    it.path.substring(0, it.path.length - 4),
+                    it.name.substring(1, it.name.length)
+                )
+            )
         }
 }
 
@@ -32,12 +42,41 @@ private fun changeDirectory(path: String) {
  */
 private fun changeImageLink(path: String) {
 
-    // 指定したパス内の、全てのディレクトリ、ファイルを取得
-    File(path).walkTopDown()
+    val regImageLink = Regex("""!\[.*]\(img/[0-9]{4}/[0-9]{3}.(jpg|png)\)""")
+    val regChangeDirName = Regex("""/[0-9]{4}/""")
+
+    val targetFiles = File(path).walkTopDown()
         // 拡張子がmdのファイルを抽出
         .filter { it.isFile && it.extension == "md" }
-        .forEach {
-            it.forEachLine {
+
+    val writeLines = mutableListOf<String>()
+    for (file in targetFiles) {
+
+        writeLines.clear()
+
+        val writeList = mutableListOf<String>()
+        file.forEachLine {
+            // 正規表現で部分一致する場合
+            if (regImageLink.containsMatchIn(it)) {
+
+                // 必ず1件のみ存在する
+                val result = regChangeDirName.findAll(it)
+                    .elementAt(0).value
+
+                val text = it.replace(
+                    result,
+                    "/" + result.substring(2)
+                )
+                writeList.add(text)
+
+            } else {
+                writeList.add(it)
             }
         }
+
+        file.writeText(
+            writeList.joinToString(System.getProperty("line.separator"))
+                    + System.getProperty("line.separator")
+        )
+    }
 }
