@@ -54,7 +54,6 @@ private fun changeImageLink(path: String) {
 
         writeLines.clear()
 
-        val writeList = mutableListOf<String>()
         file.forEachLine {
             // 正規表現で部分一致する場合
             if (regImageLink.containsMatchIn(it)) {
@@ -67,15 +66,15 @@ private fun changeImageLink(path: String) {
                     result,
                     "/" + result.substring(2)
                 )
-                writeList.add(text)
+                writeLines.add(text)
 
             } else {
-                writeList.add(it)
+                writeLines.add(it)
             }
         }
 
         file.writeText(
-            writeList.joinToString(System.getProperty("line.separator"))
+            writeLines.joinToString(System.getProperty("line.separator"))
                     + System.getProperty("line.separator")
         )
     }
