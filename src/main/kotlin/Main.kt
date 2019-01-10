@@ -11,6 +11,9 @@ fun main(args: Array<String>) {
 
     changeDirectory(path)
     changeImageLink(path)
+
+    changeFileName(path)
+    changeImageLink2(path)
 }
 
 /**
@@ -30,7 +33,26 @@ private fun changeDirectory(path: String) {
             // 変更するディレクトリ（Fileクラスで作成）を指定し、名前を変更
             it.renameTo(
                 File(
+                    // ファイル名の除くパス名
                     it.path.substring(0, it.path.length - 4),
+                    // ファイル名から先頭1文字を除いたファイル名
+                    it.name.substring(1, it.name.length)
+                )
+            )
+        }
+}
+
+/**
+ * 数字3桁の画像ファイル名から先頭の数字1桁を削除し、数字2桁のファイル名に変更します。
+ */
+fun changeFileName(path: String) {
+
+    File(path).walkTopDown()
+        .filter { it.isFile && (it.extension == "png" || it.extension == "jpg") }
+        .forEach {
+            it.renameTo(
+                File(
+                    it.path.substring(0, it.path.length - 7),
                     it.name.substring(1, it.name.length)
                 )
             )
@@ -47,6 +69,49 @@ private fun changeImageLink(path: String) {
 
     val targetFiles = File(path).walkTopDown()
         // 拡張子がmdのファイルを抽出
+        .filter { it.isFile && it.extension == "md" }
+
+    val writeLines = mutableListOf<String>()
+    for (file in targetFiles) {
+
+        writeLines.clear()
+
+        // 1行ずつループ
+        file.forEachLine {
+            // 正規表現で部分一致する場合
+            if (regImageLink.containsMatchIn(it)) {
+
+                // 必ず1件のみ存在する
+                val result = regChangeDirName.findAll(it)
+                    .elementAt(0).value
+
+                val text = it.replace(
+                    result,
+                    "/" + result.substring(2)
+                )
+                writeLines.add(text)
+
+            } else {
+                writeLines.add(it)
+            }
+        }
+
+        file.writeText(
+            writeLines.joinToString(System.getProperty("line.separator"))
+                    + System.getProperty("line.separator")
+        )
+    }
+}
+
+/**
+ * Markdownファイル内の画像リンクのパスを修正します。
+ */
+fun changeImageLink2(path: String) {
+
+    val regImageLink = Regex("""!\[.*]\(img/[0-9]{3}/[0-9]{3}.(jpg|png)\)""")
+    val regChangeDirName = Regex("""/[0-9]{3}\.""")
+
+    val targetFiles = File(path).walkTopDown()
         .filter { it.isFile && it.extension == "md" }
 
     val writeLines = mutableListOf<String>()
