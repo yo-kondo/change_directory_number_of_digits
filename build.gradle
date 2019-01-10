@@ -2,7 +2,7 @@ plugins {
     id 'org.jetbrains.kotlin.jvm' version '1.3.11'
 }
 
-group 'ChangeDirectory'
+group 'change_directory_number_of_digits'
 version '1.0-SNAPSHOT'
 
 repositories {
